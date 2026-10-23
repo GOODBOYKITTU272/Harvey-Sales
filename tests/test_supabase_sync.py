@@ -91,3 +91,64 @@ async def test_backup_uploads_db_and_tokens(monkeypatch, tmp_path):
         assert res is True
         assert any("harvey.db" in u for u in uploaded_urls)
         assert any("m365_token.json" in u for u in uploaded_urls)
+
+
+def test_prepare_row_for_supabase_parses_json():
+    row = {
+        "id": "c1",
+        "name": "Acme Corp",
+        "tech_stack_json": '["Python", "React"]',
+        "signals_json": '{"hiring": true}',
+        "notes": "not json",
+    }
+    prepared = supabase_sync._prepare_row_for_supabase(row)
+    assert prepared["id"] == "c1"
+    assert prepared["tech_stack_json"] == ["Python", "React"]
+    assert prepared["signals_json"] == {"hiring": True}
+    assert prepared["notes"] == "not json"
+
+
+@pytest.mark.asyncio
+async def test_sync_tables_skips_without_credentials(monkeypatch):
+    monkeypatch.setattr(supabase_sync, "_get_credentials", lambda env=None: ("", ""))
+    res = await supabase_sync.sync_tables_to_supabase()
+    assert res is False
+
+
+@pytest.mark.asyncio
+async def test_sync_tables_skips_without_db(monkeypatch, tmp_path):
+    monkeypatch.setattr(supabase_sync, "_get_credentials", lambda env=None: ("https://test.supabase.co", "key123"))
+    monkeypatch.setattr(supabase_sync, "DB_FILE_PATH", tmp_path / "data" / "missing.db")
+    res = await supabase_sync.sync_tables_to_supabase()
+    assert res is False
+
+
+@pytest.mark.asyncio
+async def test_sync_tables_success_with_mock(monkeypatch, tmp_path):
+    import sqlite3
+    db_file = tmp_path / "data" / "harvey.db"
+    db_file.parent.mkdir(parents=True, exist_ok=True)
+    con = sqlite3.connect(str(db_file))
+    con.execute("CREATE TABLE signal_codes (code TEXT PRIMARY KEY, label TEXT)")
+    con.execute("INSERT INTO signal_codes VALUES ('test_code', 'Test Label')")
+    con.commit()
+    con.close()
+
+    monkeypatch.setattr(supabase_sync, "_get_credentials", lambda env=None: ("https://test.supabase.co", "key123"))
+    monkeypatch.setattr(supabase_sync, "DB_FILE_PATH", db_file)
+
+    posts = []
+
+    async def fake_post(url, headers, json=None):
+        posts.append((url, json))
+        req = httpx.Request("POST", url)
+        return httpx.Response(201, json={"status": "ok"}, request=req)
+
+    with patch("httpx.AsyncClient.post", side_effect=fake_post):
+        res = await supabase_sync.sync_tables_to_supabase()
+        assert res is True
+        assert len(posts) >= 1
+        assert any("signal_codes" in p[0] for p in posts)
+        synced_item = next(p[1] for p in posts if "signal_codes" in p[0])[0]
+        assert synced_item["code"] == "test_code"
+

@@ -786,6 +786,18 @@ def cmd_sending(args):
     asyncio.run(_run())
 
 
+def cmd_sync_supabase(args):
+    """Push SQLite tables into Supabase PostgreSQL so they populate the Table Editor."""
+    from harvey.integrations.supabase_sync import sync_tables_to_supabase
+    print("\n  Syncing local database with Supabase Table Editor...")
+    success = asyncio.run(sync_tables_to_supabase())
+    if success:
+        print("  ✓ Successfully mirrored tables to Supabase.\n")
+    else:
+        print("  ✗ Supabase sync failed. Verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.\n")
+        raise SystemExit(1)
+
+
 def main():
     from harvey.textio import utf8_stdio
     utf8_stdio()
@@ -939,6 +951,10 @@ def main():
     sub = subparsers.add_parser("usage", help="Show brain usage and quota (Claude or Codex)")
     sub.add_argument("--days", type=int, default=30, help="Breakdown window (default: 30)")
     sub.set_defaults(func=cmd_usage)
+
+    # harvey sync-supabase
+    sub = subparsers.add_parser("sync-supabase", help="Mirror local SQLite tables to Supabase Table Editor")
+    sub.set_defaults(func=cmd_sync_supabase)
 
     args = parser.parse_args()
     args._project_root = project_root

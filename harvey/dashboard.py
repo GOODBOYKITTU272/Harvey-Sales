@@ -1654,6 +1654,20 @@ async def seed_pipeline(request: Request):
         return JSONResponse({"success": False, "message": str(e)}, status_code=500)
 
 
+@app.post("/api/sync/supabase")
+async def trigger_supabase_sync():
+    """Trigger on-demand mirror of local SQLite tables to Supabase Table Editor."""
+    try:
+        from harvey.integrations.supabase_sync import backup_db_to_supabase, sync_tables_to_supabase
+        await backup_db_to_supabase()
+        success = await sync_tables_to_supabase()
+        return {"success": success}
+    except Exception as e:
+        logger.exception("Supabase manual sync failed")
+        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
+
+
 async def _seed_ediscas_pipeline(state, force: bool = False) -> dict:
     """Populate high-intent physical facility accounts for Dubai, Abu Dhabi, Houston, Dallas."""
     await state.init_db()
@@ -1954,6 +1968,12 @@ async def _seed_ediscas_pipeline(state, force: bool = False) -> dict:
         await state.add_campaign(campaign)
     except Exception as exc:
         logger.warning(f"Campaign add note: {exc}")
+
+    try:
+        from harvey.integrations.supabase_sync import sync_tables_to_supabase
+        await sync_tables_to_supabase()
+    except Exception as exc:
+        logger.warning(f"Supabase sync after seed note: {exc}")
 
     return {
         "success": True,
