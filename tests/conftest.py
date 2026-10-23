@@ -50,3 +50,24 @@ import harvey.humanize  # noqa: E402
 def _no_installed_humanizer(monkeypatch, tmp_path):
     """Tests never pick up the operator's real ~/.claude Humanizer skill."""
     monkeypatch.setattr(harvey.humanize, "SKILL_PATH", tmp_path / "no-humanizer.md")
+
+
+@pytest.fixture(autouse=True)
+def _mock_mx_resolution(monkeypatch, request):
+    """Default MX resolver in test suite: provides a mock mail server for fake test
+    domains so offline unit tests don't fail DNS lookups. Modules testing MX
+    resolution (test_email_finder) or explicit DNS blocks override this."""
+    from harvey.integrations import email_finder
+    if "test_email_finder" in request.node.nodeid:
+        yield
+        return
+
+    async def _stub_mx(domain):
+        clean = (domain or "").strip().lower()
+        if clean in ("dead.invalid", "nonexistent.example", "invalid.test"):
+            return None
+        return "mail." + clean
+
+    monkeypatch.setattr(email_finder, "get_mx_host", _stub_mx)
+    yield
+

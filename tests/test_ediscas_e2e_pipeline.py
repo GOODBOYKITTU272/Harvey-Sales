@@ -222,6 +222,7 @@ async def test_e2e_stage4_outbox_send_dispatch(env, monkeypatch):
 
     monkeypatch.setattr("harvey.agents.sender.get_mail_provider", lambda c, e: fake_provider)
     monkeypatch.setattr("harvey.agents.handler.get_mail_provider", lambda c, e: fake_provider)
+    monkeypatch.setattr("harvey.integrations.email_finder.get_mx_host", AsyncMock(return_value="mail.ediscas.example"))
 
     # Trigger immediate send
     send_res = env.post("/api/outbox/send")

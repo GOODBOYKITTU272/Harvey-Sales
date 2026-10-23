@@ -1607,8 +1607,10 @@ async function loadOutbox() {
   // The kill switch gets a banner only when it's actually on — a permanent
   // bar for a thing that isn't happening is just noise.
   banner.innerHTML = data.paused
-    ? '<div class="banner bad">' + icon('alert') + '<div><b>Sending is paused</b>' +
-        '<p>' + escHtml(data.paused) + '. Approved mail stays queued until you resume.</p></div></div>'
+    ? '<div class="banner bad" style="display:flex;align-items:center;justify-content:space-between;gap:16px">' +
+        '<div style="display:flex;align-items:center;gap:12px">' + icon('alert') + '<div><b>Sending is paused</b>' +
+        '<p style="margin:2px 0 0">' + escHtml(data.paused) + '. Approved mail stays queued until you resume.</p></div></div>' +
+        '<button class="btn btn-sm btn-primary" style="white-space:nowrap" onclick="sendingToggle(\'resume\')">Resume sending & clear bounces</button></div>'
     : '';
   // Only once there is mail to warn about: a fresh install sends nothing.
   const anyMail = pending.length || (data.approved || []).length || (data.sent || []).length;

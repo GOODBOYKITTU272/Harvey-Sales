@@ -524,6 +524,23 @@ class Sender:
             # A first email to someone already contacted is always a duplicate.
             if item["step"] == 1 and prospect.status == "contacted":
                 return "cancelled", "already contacted"
+
+        # DNS MX check: fail-safe against non-existent, fake, or dead domains
+        to_email = (item.get("to_email") or "").strip().lower()
+        if "@" in to_email:
+            domain = to_email.split("@", 1)[1].strip()
+            from harvey.integrations.email_finder import get_mx_host
+            try:
+                mx_host = await get_mx_host(domain)
+            except Exception as e:
+                logger.warning(f"Sender: MX lookup error for {domain}: {e}")
+                mx_host = None
+            if not mx_host:
+                logger.warning(
+                    f"Sender: gate blocked email to {to_email} — domain '{domain}' has no valid MX records."
+                )
+                return "failed", f"gate: domain '{domain}' has no valid MX mail servers on the internet"
+
         gate = pre_send_check(
             item["to_email"], item["subject"], self._outgoing_body(item),
             prospect=prospect, allow_risky=allow_risky, kind=item["kind"],

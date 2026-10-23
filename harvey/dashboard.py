@@ -952,6 +952,7 @@ async def outbox_send_now():
         if paused:
             return JSONResponse({
                 "success": False,
+                "is_paused": True,
                 "message": f"Sending is paused: {paused}. Resume sending first.",
             }, status_code=400)
 
