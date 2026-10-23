@@ -406,9 +406,15 @@ def _needs_setup() -> bool:
 
     env_file = PROJECT_ROOT / ".env"
 
-    # If .env doesn't exist, definitely needs setup
+    # If .env doesn't exist on disk, check if running in a cloud/container environment
+    # where config is provided via os.environ (e.g. Render, Docker, Heroku).
     if not env_file.exists():
-        return True
+        has_cloud_env = any(k in os.environ for k in (
+            "DASHBOARD_TOKEN", "M365_CLIENT_ID", "ANTHROPIC_API_KEY", "OPENAI_API_KEY",
+            "REOON_API_KEY", "ZEROBOUNCE_API_KEY", "GMAIL_CLIENT_ID", "SMTP_HOST"
+        ))
+        if not has_cloud_env:
+            return True
 
     # harvey.local.yaml wins over the tracked harvey.yaml template, same
     # resolution order the real config loader uses (see config.py).
