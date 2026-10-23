@@ -105,7 +105,7 @@ usage:
 
 brain:
   provider: "claude"
-  model: "claude-3-5-haiku-20241022"
+  model: "haiku"
 
 compliance:
   postal_address: "EDISCAS AI Research, Silicon Oasis, Dubai, UAE"
