@@ -46,14 +46,9 @@ Style rules are negotiable. These are not:
 - **Parenthetical asides (like this)**: Adds clutter. Cut them.
 - **"No pressure" / "No obligation"**: Drawing attention to pressure.
 
-### Banned Formatting
-- No bold text in cold emails
-- No italics
-- No bullet points or numbered lists
-- No headers or sections
-- No horizontal rules
-- No blockquotes
-- Keep it plain text. Real emails are plain text.
+### Formatting Guidelines
+- Use bold text sparingly and strategically on high-impact terms only: the monthly earnings numbers, the zero-risk privacy guarantee, and the exact action hook.
+- Keep the overall email look clean, uncluttered, and readable in under 15 seconds on mobile.
 
 ---
 
