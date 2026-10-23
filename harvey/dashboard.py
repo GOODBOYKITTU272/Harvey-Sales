@@ -1808,7 +1808,7 @@ async def _seed_ediscas_pipeline(state, force: bool = False) -> dict:
         sequence=[
             EmailStep(
                 step=1,
-                subject="EDISCAS partnership — commercial facility data licensing ({company})",
+                subject="EDISCAS data partnership — {company}",
                 body=(
                     "Hi {first_name},\n\n"
                     "I lead commercial data partnerships at EDISCAS. We partner with established facilities "
@@ -1830,7 +1830,7 @@ async def _seed_ediscas_pipeline(state, force: bool = False) -> dict:
             ),
             EmailStep(
                 step=2,
-                subject="Re: EDISCAS partnership — commercial facility data licensing ({company})",
+                subject="Re: EDISCAS data partnership — {company}",
                 body=(
                     "Hi {first_name},\n\n"
                     "Following up on my note regarding the Physical AI facility program. Facility operators often ask "
@@ -1915,7 +1915,7 @@ async def _seed_ediscas_pipeline(state, force: bool = False) -> dict:
             f'Not interested? Reply "no thanks" and I won\'t email again.'
         )
 
-        pitch_subject = f"EDISCAS partnership — commercial facility data licensing ({item['company_name']})"
+        pitch_subject = f"EDISCAS data partnership — {item['company_name']}"[:80]
 
         outbox_id = await state.add_outbox_item(
             prospect_id=p_id,
