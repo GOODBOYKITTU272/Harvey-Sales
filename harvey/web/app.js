@@ -439,6 +439,30 @@ async function loadToday() {
   _todayStats = data.stats || {};
   renderFigures(_todayStats);
 
+  const seedBanner = document.getElementById('today-seed-banner');
+  if (seedBanner) {
+    if ((_todayStats.prospects || 0) === 0) {
+      seedBanner.innerHTML =
+        '<div class="card" style="border:1px solid var(--accent);background:var(--accent-bg, rgba(99,102,241,0.08));margin-bottom:16px;padding:16px">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">' +
+            '<div>' +
+              '<h3 style="margin:0 0 4px;font-size:15px;display:flex;align-items:center;gap:8px">' +
+                icon('sparkle') + ' EDISCAS Physical AI Facility Pipeline' +
+              '</h3>' +
+              '<p class="muted" style="margin:0;font-size:13px">' +
+                'Database is empty. Initialize target commercial facilities across Dubai, Abu Dhabi, Houston, and Dallas with personalized outreach pitches.' +
+              '</p>' +
+            '</div>' +
+            '<button class="btn btn-primary" id="btn-seed-pipeline" onclick="seedPipeline()">' +
+              icon('check') + ' Initialize Target Facilities (Dubai & Texas)' +
+            '</button>' +
+          '</div>' +
+        '</div>';
+    } else {
+      seedBanner.innerHTML = '';
+    }
+  }
+
   const items = data.items || [];
   if (!items.length) {
     el.innerHTML = '<div class="queue-clear">' +
@@ -463,6 +487,36 @@ async function loadToday() {
         escHtml(it.action) + icon('arrow') + '</button>' +
     '</div>';
   }).join('') + '</div>';
+}
+
+async function seedPipeline() {
+  const btn = document.getElementById('btn-seed-pipeline');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Initializing pipeline…';
+  }
+  try {
+    const res = await api('/api/pipeline/seed', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{}'
+    });
+    if (res && res.success) {
+      loadCurrentTab();
+    } else {
+      alert('Seeding failed: ' + (res?.message || 'unknown error'));
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Retry Initialization';
+      }
+    }
+  } catch (err) {
+    alert('Error connecting to server: ' + err);
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Retry Initialization';
+    }
+  }
 }
 
 // ── Live status: the "what's happening?" answer, kept on screen ──

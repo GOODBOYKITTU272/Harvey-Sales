@@ -1566,6 +1566,335 @@ async def stop_discovery():
         return JSONResponse({"success": False, "message": str(e)}, status_code=500)
 
 
+@app.post("/api/pipeline/seed")
+async def seed_pipeline(request: Request):
+    """Seed initial target commercial facilities and personalized outreach pitches for EDISCAS."""
+    try:
+        body = {}
+        try:
+            body = await request.json()
+        except Exception:
+            pass
+        force = bool(body.get("force", False))
+        state = _state()
+        result = await _seed_ediscas_pipeline(state, force=force)
+        return result
+    except Exception as e:
+        logger.exception("pipeline seed failed")
+        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
+
+async def _seed_ediscas_pipeline(state, force: bool = False) -> dict:
+    """Populate high-intent physical facility accounts for Dubai, Abu Dhabi, Houston, Dallas."""
+    await state.init_db()
+    existing_prospects = await _scalar("SELECT COUNT(*) FROM prospects")
+    if existing_prospects > 0 and not force:
+        return {
+            "success": True,
+            "message": "Pipeline already has contacts.",
+            "seeded": False,
+            "prospects": existing_prospects,
+            "companies": await _scalar("SELECT COUNT(*) FROM companies"),
+            "outbox_pending": await _scalar("SELECT COUNT(*) FROM outbox WHERE status = 'pending_review'"),
+        }
+
+    from harvey.models.company import Company
+    from harvey.models.prospect import Prospect
+    from harvey.models.campaign import Campaign, EmailStep
+
+    facilities = [
+        {
+            "company_name": "Al Quoz Auto Performance & Engineering",
+            "domain": "alquozauto.ae",
+            "website": "https://alquozauto.ae",
+            "location": "Dubai, United Arab Emirates",
+            "industry": "Auto Repair & Vehicle Services",
+            "size": "15-50 employees",
+            "description": "Commercial multi-bay automotive repair, diagnostics, and mechanical servicing facility in Al Quoz Industrial.",
+            "signals": [{"type": "PHYSICAL_TASK", "detail": "Vehicle diagnostics, brake overhaul, and hoist mechanical maintenance"}],
+            "first_name": "Tariq",
+            "last_name": "Mansoor",
+            "email": "tariq@alquozauto.ae",
+            "title": "Operations Director",
+            "region": "UAE",
+            "rate_range": "15,000–20,000 AED/mo",
+            "signal_desc": "automotive diagnostics, brake repairs, and hoist operations",
+        },
+        {
+            "company_name": "Al Barsha Central Commercial Kitchens",
+            "domain": "barshakitchens.ae",
+            "website": "https://barshakitchens.ae",
+            "location": "Dubai, United Arab Emirates",
+            "industry": "Restaurants & Commercial Kitchens",
+            "size": "20-100 employees",
+            "description": "High-volume commercial kitchen facility specializing in commercial catering, culinary prep, and food assembly.",
+            "signals": [{"type": "PHYSICAL_TASK", "detail": "Culinary chopping, stove work, assembly line packaging, and sanitization"}],
+            "first_name": "Samer",
+            "last_name": "Al-Hashemi",
+            "email": "samer@barshakitchens.ae",
+            "title": "Facility General Manager",
+            "region": "UAE",
+            "rate_range": "15,000–20,000 AED/mo",
+            "signal_desc": "food prep, culinary assembly, and kitchen station workflows",
+        },
+        {
+            "company_name": "JAFZA Global Freight & 3PL Logistics",
+            "domain": "jafzafreight.ae",
+            "website": "https://jafzafreight.ae",
+            "location": "Dubai, United Arab Emirates",
+            "industry": "Logistics, Warehousing & 3PL",
+            "size": "50-250 employees",
+            "description": "Free zone container logistics, dry warehouse storage, and automated fulfillment operations in Jebel Ali.",
+            "signals": [{"type": "PHYSICAL_TASK", "detail": "Pallet picking, box sorting, barcode scanning, and forklift loading"}],
+            "first_name": "Rajesh",
+            "last_name": "Nair",
+            "email": "rajesh.nair@jafzafreight.ae",
+            "title": "Logistics & Operations Director",
+            "region": "UAE",
+            "rate_range": "15,000–20,000 AED/mo",
+            "signal_desc": "warehouse picking, pallet staging, and barcode scanning",
+        },
+        {
+            "company_name": "Emirates MEP & Commercial Facilities",
+            "domain": "emiratesmep.ae",
+            "website": "https://emiratesmep.ae",
+            "location": "Abu Dhabi, United Arab Emirates",
+            "industry": "Plumbing, HVAC & Electrical",
+            "size": "25-100 employees",
+            "description": "Commercial mechanical, electrical, and plumbing engineering contractor serving facilities across UAE.",
+            "signals": [{"type": "PHYSICAL_TASK", "detail": "Electrical panel wiring, copper pipe soldering, and chiller maintenance"}],
+            "first_name": "Khaled",
+            "last_name": "Bin Zayed",
+            "email": "khaled@emiratesmep.ae",
+            "title": "Managing Director",
+            "region": "UAE",
+            "rate_range": "15,000–20,000 AED/mo",
+            "signal_desc": "electrical conduit wiring, chiller maintenance, and piping assembly",
+        },
+        {
+            "company_name": "Houston Port Distribution & Cold Chain 3PL",
+            "domain": "houstonport3pl.com",
+            "website": "https://houstonport3pl.com",
+            "location": "Houston, TX",
+            "industry": "Logistics, Warehousing & 3PL",
+            "size": "50-200 employees",
+            "description": "Port-adjacent refrigerated and ambient 3PL logistics facility handling regional food and commercial goods.",
+            "signals": [{"type": "PHYSICAL_TASK", "detail": "Carton picking, pallet wrap, cross-dock loading, and inventory staging"}],
+            "first_name": "Marcus",
+            "last_name": "Vance",
+            "email": "marcus.vance@houstonport3pl.com",
+            "title": "Director of Facility Operations",
+            "region": "US",
+            "rate_range": "$10,000–$20,000 USD/mo",
+            "signal_desc": "pallet breakdown, warehouse picking, and cross-dock staging",
+        },
+        {
+            "company_name": "Bayou City Fleet & Commercial Truck Repair",
+            "domain": "bayoucityfleet.com",
+            "website": "https://bayoucityfleet.com",
+            "location": "Houston, TX",
+            "industry": "Auto Repair & Vehicle Services",
+            "size": "20-75 employees",
+            "description": "Heavy commercial truck and fleet maintenance facility handling diesel engines, hydraulics, and transmissions.",
+            "signals": [{"type": "PHYSICAL_TASK", "detail": "Diesel diagnostics, hydraulic line replacement, and brake assemblies"}],
+            "first_name": "David",
+            "last_name": "Sterling",
+            "email": "d.sterling@bayoucityfleet.com",
+            "title": "VP of Fleet Operations",
+            "region": "US",
+            "rate_range": "$10,000–$20,000 USD/mo",
+            "signal_desc": "heavy truck diagnostics, brake overhauls, and hydraulic repairs",
+        },
+        {
+            "company_name": "Lone Star Commercial Kitchen Hub",
+            "domain": "lonestarkitchenhub.com",
+            "website": "https://lonestarkitchenhub.com",
+            "location": "Dallas, TX",
+            "industry": "Restaurants & Commercial Kitchens",
+            "size": "25-100 employees",
+            "description": "Shared commissary and commercial culinary production facility supporting regional food brands and institutional kitchens.",
+            "signals": [{"type": "PHYSICAL_TASK", "detail": "High-volume vegetable slicing, steam table assembly, dish sanitation, and packaging"}],
+            "first_name": "Elena",
+            "last_name": "Rodriguez",
+            "email": "elena@lonestarkitchenhub.com",
+            "title": "Operations Director",
+            "region": "US",
+            "rate_range": "$10,000–$20,000 USD/mo",
+            "signal_desc": "commercial food prep, culinary assembly, and kitchen sanitization",
+        },
+        {
+            "company_name": "North Texas Commercial HVAC & MEP Services",
+            "domain": "northtexashvac.com",
+            "website": "https://northtexashvac.com",
+            "location": "Dallas, TX",
+            "industry": "Plumbing, HVAC & Electrical",
+            "size": "30-150 employees",
+            "description": "Commercial building services contractor handling rooftop HVAC units, industrial refrigeration, and ductwork fabrication.",
+            "signals": [{"type": "PHYSICAL_TASK", "detail": "Rooftop unit compressor wiring, condenser coil cleaning, and sheet metal duct assembly"}],
+            "first_name": "Bradley",
+            "last_name": "Cooper",
+            "email": "bcooper@northtexashvac.com",
+            "title": "Facility & Service Operations Manager",
+            "region": "US",
+            "rate_range": "$10,000–$20,000 USD/mo",
+            "signal_desc": "commercial HVAC diagnostics, compressor repairs, and duct maintenance",
+        },
+    ]
+
+    prospect_ids = []
+    created_companies = 0
+    created_prospects = 0
+    created_outbox = 0
+
+    campaign_id = "camp_ediscas_facilities"
+    campaign = Campaign(
+        id=campaign_id,
+        name="EDISCAS Physical AI Facility Program (Dubai & Texas)",
+        channel="email",
+        status="active",
+        sequence=[
+            EmailStep(
+                step=1,
+                subject="EDISCAS partnership — commercial facility data licensing ({company})",
+                body=(
+                    "Hi {first_name},\n\n"
+                    "I lead commercial data partnerships at EDISCAS. We partner with established facilities "
+                    "like {company} to monetize routine hands-on work — specifically {signal_desc} — by capturing "
+                    "verified first-person (egocentric) smartphone video for robotics foundation model training.\n\n"
+                    "Key details of how this works:\n"
+                    "• Zero workflow disruption: Your technicians/staff simply record approved routine tasks using standard smartphones.\n"
+                    "• 100% automated privacy: Bystander faces, customer details, and audio are automatically de-identified under strict NDA.\n"
+                    "• Weekly payouts: Facilities earn {rate_range} based on task volume, paid weekly directly via Zoho Books.\n\n"
+                    "Would you be open to a brief 5-minute review of our approved task list and rate card?\n\n"
+                    "Best regards,\n\n"
+                    "Ramakrishna\n"
+                    "Commercial Partnerships & Data Acquisition | EDISCAS\n"
+                    "ramakrishna@applywizz.ai\n"
+                    "EDISCAS AI Research, Silicon Oasis, Dubai, UAE\n"
+                    'Not interested? Reply "no thanks" and I won\'t email again.'
+                ),
+                delay_days=0,
+            ),
+            EmailStep(
+                step=2,
+                subject="Re: EDISCAS partnership — commercial facility data licensing ({company})",
+                body=(
+                    "Hi {first_name},\n\n"
+                    "Following up on my note regarding the Physical AI facility program. Facility operators often ask "
+                    "about privacy: our redaction pipeline runs 100% automated face blur, license plate redaction, and audio "
+                    "masking before any dataset is processed, ensuring zero sensitive customer or facility details leave your premises.\n\n"
+                    "Would you have 5 minutes this week to glance over our 1-page rate card?\n\n"
+                    "Ramakrishna\n"
+                    "EDISCAS"
+                ),
+                delay_days=3,
+            ),
+            EmailStep(
+                step=3,
+                subject="Approved task list & payout breakdown for {company}",
+                body=(
+                    "Hi {first_name},\n\n"
+                    "Closing the loop on this. We are currently finalizing our data acquisition cohort for facilities in {location}. "
+                    "If your team performs hands-on tasks like {signal_desc}, you can monetize those existing operations without altering your workflow.\n\n"
+                    "If you'd like to see the compensation breakdown, let me know and I'll send the 1-page summary.\n\n"
+                    "Ramakrishna\n"
+                    "EDISCAS"
+                ),
+                delay_days=4,
+            ),
+        ],
+        prospect_ids=[],
+    )
+
+    now_iso = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
+
+    for item in facilities:
+        comp = Company(
+            name=item["company_name"],
+            domain=item["domain"],
+            website=item["website"],
+            description=item["description"],
+            industry=item["industry"],
+            company_size=item["size"],
+            location=item["location"],
+            source="ediscas_seed",
+            source_url="https://ediscas.com",
+            signals=item["signals"],
+        )
+        c_id = await state.add_company(comp)
+        created_companies += 1
+
+        prosp = Prospect(
+            company_id=c_id,
+            first_name=item["first_name"],
+            last_name=item["last_name"],
+            email=item["email"],
+            email_verified=True,
+            email_status="verified",
+            title=item["title"],
+            source="ediscas_seed",
+            status="new",
+            company=item["company_name"],
+            industry=item["industry"],
+            company_size=item["size"],
+        )
+        p_id = await state.add_prospect(prosp)
+        prospect_ids.append(p_id)
+        created_prospects += 1
+
+        # Render pitch for step 1
+        pitch_body = (
+            f"Hi {item['first_name']},\n\n"
+            f"I lead commercial data partnerships at EDISCAS. We partner with established facilities like "
+            f"{item['company_name']} across {item['location'].split(',')[0]} to capture verified first-person "
+            f"(egocentric) smartphone video of everyday hands-on work — specifically {item['signal_desc']} — "
+            f"for robotics and Physical AI foundation model training.\n\n"
+            f"Key details of how this works:\n"
+            f"• Zero workflow disruption: Your staff simply records approved routine tasks using standard smartphones.\n"
+            f"• 100% automated privacy: Bystander faces, customer details, and audio are automatically de-identified under strict NDA.\n"
+            f"• Weekly payouts: Facilities earn {item['rate_range']} based on task volume, paid weekly directly via Zoho Books.\n\n"
+            f"Would you be open to a brief 5-minute review of our approved task list and rate card?\n\n"
+            f"Best regards,\n\n"
+            f"Ramakrishna\n"
+            f"Commercial Partnerships & Data Acquisition | EDISCAS\n"
+            f"ramakrishna@applywizz.ai\n"
+            f"EDISCAS AI Research, Silicon Oasis, Dubai, UAE\n"
+            f'Not interested? Reply "no thanks" and I won\'t email again.'
+        )
+
+        pitch_subject = f"EDISCAS partnership — commercial facility data licensing ({item['company_name']})"
+
+        outbox_id = await state.add_outbox_item(
+            prospect_id=p_id,
+            to_email=item["email"],
+            subject=pitch_subject,
+            body=pitch_body,
+            send_at=now_iso,
+            status="pending_review",
+            campaign_id=campaign_id,
+            step=1,
+            kind="sequence",
+            provider="microsoft",
+        )
+        if outbox_id:
+            created_outbox += 1
+
+    campaign.prospect_ids = prospect_ids
+    try:
+        await state.add_campaign(campaign)
+    except Exception as exc:
+        logger.warning(f"Campaign add note: {exc}")
+
+    return {
+        "success": True,
+        "message": f"Successfully seeded {created_companies} facilities and queued {created_outbox} drafts for review.",
+        "seeded": True,
+        "companies": created_companies,
+        "prospects": created_prospects,
+        "outbox_pending": created_outbox,
+    }
+
+
 def _parse_ts(value) -> datetime | None:
     """SQLite CURRENT_TIMESTAMP / isoformat strings -> naive UTC datetime."""
     if not value:
