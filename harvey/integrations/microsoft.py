@@ -27,11 +27,13 @@ import hashlib
 import http.server
 import json
 import logging
+import os
 import secrets
 import socket
 import time
 import webbrowser
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 import httpx
 
