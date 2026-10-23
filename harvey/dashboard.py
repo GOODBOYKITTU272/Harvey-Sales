@@ -2194,9 +2194,11 @@ class DashboardSetupError(Exception):
 
 
 def _check_loopback_bind(host: str) -> str:
-    """The host to bind, which must be a loopback address. The dashboard has
-    no remote-access mode: from another machine, use an SSH tunnel."""
+    """The host to bind. When DASHBOARD_ALLOW_REMOTE is enabled, allows binding to 0.0.0.0."""
+    allow_remote = os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
     name = (host or "").strip().lower()
+    if allow_remote:
+        return name or "0.0.0.0"
     if name.startswith("[") and name.endswith("]"):
         name = name[1:-1]
     if not auth.is_loopback(name):
@@ -2208,9 +2210,14 @@ def _check_loopback_bind(host: str) -> str:
 
 
 def dashboard_url(host: str = "127.0.0.1", port: int = 5555) -> str:
-    """The unlock link. The token rides in the #fragment, which browsers
-    never send to the server (so it stays out of logs and Referer); the
-    page moves it to sessionStorage and strips it from the address bar."""
+    """The unlock link. The token rides in the #fragment."""
+    allow_remote = os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
+    if allow_remote:
+        public_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN") or os.getenv("RENDER_EXTERNAL_URL")
+        if public_domain:
+            if not public_domain.startswith("http"):
+                public_domain = f"https://{public_domain}"
+            return f"{public_domain}/#token={token_store.get()}"
     name = _check_loopback_bind(host)
     try:
         if ipaddress.ip_address(name).version == 6:

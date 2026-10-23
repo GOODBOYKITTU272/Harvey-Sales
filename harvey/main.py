@@ -401,13 +401,18 @@ async def heartbeat(stop_event: asyncio.Event | None = None):
 
 def _needs_setup() -> bool:
     """Check if Harvey needs first-time setup."""
+    import os
+    if os.environ.get("HARVEY_SKIP_SETUP", "").lower() in ("true", "1", "yes"):
+        return False
+
     from harvey.paths import PROJECT_ROOT
     from harvey.config import _find_config_file, ConfigFileNotFoundError
 
     env_file = PROJECT_ROOT / ".env"
 
-    # If .env doesn't exist, definitely needs setup
-    if not env_file.exists():
+    # In cloud environments, env vars may be set in system env rather than .env file
+    has_system_env = any(k in os.environ for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "M365_CLIENT_ID", "REOON_API_KEY", "ZEROBOUNCE_API_KEY"))
+    if not env_file.exists() and not has_system_env:
         return True
 
     # harvey.local.yaml wins over the tracked harvey.yaml template, same
