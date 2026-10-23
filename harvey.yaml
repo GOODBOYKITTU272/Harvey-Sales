@@ -99,12 +99,12 @@ usage:
   max_daily_claude_percent: 80
   heartbeat_interval_minutes: 15
   quiet_hours:
-    start: "22:00"
-    end: "07:00"
-    timezone: "America/New_York"
+    start: "23:00"
+    end: "06:00"
+    timezone: "Asia/Dubai"
 
 compliance:
-  postal_address: ""
+  postal_address: "EDISCAS Data Partnerships, Dubai & United States"
   opt_out_line: 'Not interested? Reply "no thanks" and I won''t email again.'
   precleared:
     enabled: false
