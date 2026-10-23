@@ -55,3 +55,6 @@ include = ["harvey*"]
 # are vendored so a local tool renders correctly with the network off.
 [tool.setuptools.package-data]
 harvey = ["web/*", "web/fonts/*"]
+
+[tool.vercel]
+entrypoint = "harvey.dashboard:app"
