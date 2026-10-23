@@ -96,12 +96,16 @@ channels:
     max_daily_messages: 10
 
 usage:
-  max_daily_claude_percent: 80
+  max_daily_claude_percent: 25
   heartbeat_interval_minutes: 15
   quiet_hours:
     start: "22:00"
     end: "07:00"
     timezone: "Asia/Dubai"
+
+brain:
+  provider: "claude"
+  model: "claude-3-5-haiku-20241022"
 
 compliance:
   postal_address: "EDISCAS AI Research, Silicon Oasis, Dubai, UAE"
