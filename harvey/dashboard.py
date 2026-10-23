@@ -1658,13 +1658,31 @@ async def seed_pipeline(request: Request):
 async def trigger_supabase_sync():
     """Trigger on-demand mirror of local SQLite tables to Supabase Table Editor."""
     try:
-        from harvey.integrations.supabase_sync import backup_db_to_supabase, sync_tables_to_supabase
-        await backup_db_to_supabase()
+        from harvey.integrations.supabase_sync import backup_db_to_supabase, sync_tables_to_supabase, restore_db_from_supabase
+        existing_companies = await _scalar("SELECT COUNT(*) FROM companies")
+        if not existing_companies:
+            await restore_db_from_supabase()
+        else:
+            await backup_db_to_supabase()
         success = await sync_tables_to_supabase()
-        return {"success": success}
+        return {"success": success, "companies": await _scalar("SELECT COUNT(*) FROM companies")}
     except Exception as e:
         logger.exception("Supabase manual sync failed")
         return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
+
+@app.post("/api/restore/supabase")
+async def trigger_supabase_restore():
+    """Trigger on-demand restore of SQLite database and tokens from Supabase Storage."""
+    try:
+        from harvey.integrations.supabase_sync import restore_db_from_supabase
+        success = await restore_db_from_supabase()
+        count = await _scalar("SELECT COUNT(*) FROM companies")
+        return {"restored": success, "companies": count}
+    except Exception as e:
+        logger.exception("Supabase manual restore failed")
+        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
 
 
 
