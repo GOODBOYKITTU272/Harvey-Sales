@@ -235,7 +235,8 @@ def is_junk(domain: str, name: str = "") -> bool:
 # the settings table: a given city is looked up once, ever.
 
 NOMINATIM = "https://nominatim.openstreetmap.org/search"
-GEOCODE_UA = "Harvey/0.1 (open-source sales agent; github.com/ethanplusai/harvey)"
+GEOCODE_UA = "HarveySalesAgent/1.0 (contact: ramakrishna@applywizz.ai)"
+
 
 
 async def geocode_city(state, city: str, radius_km: int = 40,
