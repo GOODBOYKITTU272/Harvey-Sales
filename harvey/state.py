@@ -10,6 +10,7 @@ upgrade cleanly in place.
 """
 
 import json
+import re
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, date, timedelta, timezone
@@ -493,9 +494,26 @@ class StateManager:
             async with db.execute("PRAGMA user_version") as cursor:
                 (version,) = await cursor.fetchone()
 
+            async def _cols(table: str) -> set[str]:
+                try:
+                    async with db.execute(f"PRAGMA table_info({table})") as cur:
+                        return {r[1] for r in await cur.fetchall()}
+                except Exception:
+                    return set()
+
+            p_cols = await _cols("prospects")
+            c_cols = await _cols("companies")
+
             for target, script in enumerate(MIGRATIONS, start=1):
                 if version < target:
-                    await db.executescript(script)
+                    s = script
+                    if "email_status" in p_cols:
+                        s = re.sub(r"ALTER\s+TABLE\s+prospects\s+ADD\s+COLUMN\s+email_status[^;]+;", "", s, flags=re.IGNORECASE)
+                    if "tech_stack_json" in c_cols:
+                        s = re.sub(r"ALTER\s+TABLE\s+companies\s+ADD\s+COLUMN\s+tech_stack_json[^;]+;", "", s, flags=re.IGNORECASE)
+                    if "signals_json" in c_cols:
+                        s = re.sub(r"ALTER\s+TABLE\s+companies\s+ADD\s+COLUMN\s+signals_json[^;]+;", "", s, flags=re.IGNORECASE)
+                    await db.executescript(s)
                     await db.execute(f"PRAGMA user_version = {target}")
                     await db.commit()
 
