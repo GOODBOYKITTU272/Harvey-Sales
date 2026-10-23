@@ -75,6 +75,15 @@ class GraphError(RuntimeError):
 
 
 def _load_token() -> dict | None:
+    env_token = os.getenv("M365_TOKEN_JSON", "").strip()
+    if env_token and not TOKEN_FILE.is_file():
+        try:
+            parsed = json.loads(env_token)
+            if isinstance(parsed, dict) and parsed.get("refresh_token"):
+                _save_token(parsed)
+                return parsed
+        except Exception as e:
+            logger.warning(f"Could not parse M365_TOKEN_JSON env var: {e}")
     try:
         if TOKEN_FILE.is_file():
             data = json.loads(TOKEN_FILE.read_text(encoding="utf-8"))
@@ -82,6 +91,13 @@ def _load_token() -> dict | None:
                 return data
     except (OSError, json.JSONDecodeError) as e:
         logger.warning(f"Could not read Microsoft token file: {e}")
+    if env_token:
+        try:
+            data = json.loads(env_token)
+            if isinstance(data, dict) and data.get("refresh_token"):
+                return data
+        except Exception:
+            pass
     return None
 
 
