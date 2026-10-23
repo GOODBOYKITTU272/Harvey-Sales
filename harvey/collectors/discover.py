@@ -622,6 +622,16 @@ class OpenStreetMap(DiscoveryProvider):
         "plumb": ['craft=plumber'],
         "hvac": ['craft=hvac'],
         "electric": ['craft=electrician'],
+        "auto": ['shop=car_repair', 'craft=car_repair'],
+        "car": ['shop=car_repair', 'craft=car_repair'],
+        "vehicle": ['shop=car_repair', 'craft=car_repair'],
+        "repair": ['shop=car_repair', 'craft=car_repair'],
+        "kitchen": ['craft=caterer', 'amenity=restaurant'],
+        "restaurant": ['amenity=restaurant'],
+        "carpenter": ['craft=carpenter', 'craft=joiner'],
+        "wood": ['craft=carpenter', 'craft=joiner'],
+        "logistics": ['industrial=warehouse', 'building=warehouse', 'office=logistics'],
+        "warehouse": ['industrial=warehouse', 'building=warehouse', 'office=logistics'],
         "dentist": ['amenity=dentist'],
         "lawyer": ['office=lawyer'],
         "attorney": ['office=lawyer'],
@@ -680,13 +690,13 @@ class OpenStreetMap(DiscoveryProvider):
             except httpx.HTTPError as e:
                 logger.warning("osm: %s unreachable (%s)", endpoint, e)
                 continue
-            if r.status_code not in (429, 504):
+            if r.status_code == 200:
                 break
-            logger.warning("osm: %s is throttling (%s) — trying the next mirror",
+            logger.warning("osm: %s returned %s — trying the next mirror",
                            endpoint, r.status_code)
         else:
             raise RuntimeError(
-                "Every public Overpass mirror is throttling right now. This is "
+                "Every public Overpass mirror is currently unavailable or throttling. This is "
                 "free volunteer infrastructure — wait a few minutes and re-run, "
                 "or use a paid provider for bulk work.")
         if r is None:
