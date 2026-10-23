@@ -198,6 +198,19 @@ def _read_token_settled(path: Path) -> str | None:
     return _read_token(path)
 
 
+def is_remote_allowed() -> bool:
+    """True when configured to allow remote access (e.g. Render, Vercel, Railway, or Docker)."""
+    val = os.getenv("DASHBOARD_ALLOW_REMOTE", "").strip().lower()
+    if val in ("true", "1", "yes"):
+        return True
+    return bool(
+        os.getenv("RENDER")
+        or os.getenv("RENDER_SERVICE_ID")
+        or os.getenv("VERCEL")
+        or os.getenv("RAILWAY_ENVIRONMENT")
+    )
+
+
 def load_or_create_token(path: Path) -> str:
     env_token = os.getenv("DASHBOARD_TOKEN", "").strip()
     if env_token:
@@ -340,12 +353,7 @@ class DashboardGuard:
         method = scope.get("method", "GET").upper()
         path = scope.get("path", "")
 
-        allow_remote = (
-            os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
-            or bool(os.getenv("RENDER"))
-            or bool(os.getenv("VERCEL"))
-            or bool(os.getenv("RAILWAY_ENVIRONMENT"))
-        )
+        allow_remote = is_remote_allowed()
 
         # 1. Host, before anything else.
         hosts = headers.get("host", [])

@@ -3,6 +3,7 @@ FROM python:3.12-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
+    DASHBOARD_ALLOW_REMOTE=true \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 # System deps (curl needed for the Claude CLI installer)
