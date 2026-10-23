@@ -1,97 +1,70 @@
 persona:
-  name: "Ramakrishna"
-  company: "EDISCAS"
-  role: "Commercial Partnerships & Data Acquisition"
-  email: "ramakrishna@applywizz.ai"
-  linkedin: "linkedin.com/company/ediscas"
-  tone: "direct, consultative, respectful, partner-oriented"
+  name: "Harvey"
+  company: "Your Company"
+  role: "Business Development"
+  email: "harvey@yourcompany.com"
+  linkedin: "linkedin.com/in/harvey-yourcompany"
+  tone: "professional, consultative, confident"
 
 product:
-  name: "EDISCAS Physical AI Commercial Facility Program"
-  description: "Monetize hands-on commercial work tasks by capturing verified first-person (egocentric) smartphone video for robotics AI training, with 100% automated face/PII redaction and weekly payouts."
-  pricing: "$10,000–$20,000 USD/mo for active US facilities; 15,000–20,000 AED/mo in UAE (varies based on task volume and facility size). Weekly payouts via Zoho Books."
+  name: "Your Product"
+  description: "Describe what your product does and who it's for"
+  pricing: "Starting at $X/mo"
   key_benefits:
-    - "New revenue stream from everyday facility operations (kitchens, auto repair, warehousing, plumbing/HVAC, carpentry)"
-    - "Zero workflow disruption: staff records approved hands-on work using everyday smartphones"
-    - "100% automated bystander face & PII de-identification, audio masking, and strict NDA protections"
-    - "Competitive task-based earnings paid weekly directly via Zoho Books in USD ($) or local currency"
-    - "Support frontier robotics and Physical AI foundation model development with verified commercial datasets"
+    - "Benefit 1"
+    - "Benefit 2"
+    - "Benefit 3"
   objection_responses:
-    "will this disrupt our daily operations": "Not at all. Your staff only records routine, approved hands-on tasks they are already performing using a smartphone, with zero change to your customer workflow."
-    "what about customer and employee privacy": "We guarantee 100% automated bystander face de-identification, PII redaction, and audio masking. No customer faces or sensitive details ever leave your facility unredacted."
-    "what equipment do we need": "No expensive cameras or special rigs are needed. Any standard smartphone (iPhone 12+, Pixel 6+, Galaxy S21+) works with our tap-and-record Minutes tool."
-    "how and when do we get paid": "Payouts are task-based for accepted datasets and distributed weekly directly to your company account via Zoho Books."
-    "not interested": "Understood. Many facility owners don't realize that everyday commercial tasks like auto servicing, food prep, or warehouse picking are worth significant compensation to robotics AI labs right now. Would you be open to a 5-minute task rate overview?"
+    "too expensive": "I understand budget is important. Most of our clients see ROI within 30 days..."
+    "already have a solution": "That makes sense. Curious — what's the one thing you wish it did better?"
+    "not interested": "No worries at all. Mind if I ask what your current approach looks like?"
   offer:
-    primary: "Commercial facility data licensing & recording partnership"
-    entry: "1-page approved task list & weekly payout rates"
-    goal: "get_reply"
-    booking_method: "ask_preference"
-    booking_url: ""
-    meeting_duration: ""
-    meeting_owner: "Ramakrishna"
+    primary: ""                    # Main offer (e.g., "Monthly subscription starting at $99/mo")
+    entry: ""                      # Low-commitment entry (e.g., "14-day free trial", "Free audit")
+    goal: "book_call"              # Goal of outreach: book_call, start_trial, get_reply
+    booking_method: "calendar_link" # calendar_link, suggest_times, ask_preference
+    booking_url: ""                # Calendar link URL (if using calendar_link method)
+    meeting_duration: "15 minutes" # How long the call is
+    meeting_owner: ""              # Who takes the meeting (name or role)
 
 icp:
   industries:
-    - "Auto Repair & Vehicle Services"
-    - "Restaurants & Commercial Kitchens"
-    - "Logistics, Warehousing & 3PL"
-    - "Plumbing, HVAC & Electrical"
-    - "Carpentry & Woodwork"
-    - "Construction & Renovation"
-    - "Manufacturing & Production"
-  company_size: "5-250 employees"
+    - "SaaS"
+    - "Marketing Agency"
+  company_size: "10-200 employees"
   titles:
-    - "Owner"
-    - "Managing Director"
-    - "Operations Director"
-    - "Director of Operations"
-    - "General Manager"
-    - "Facility Manager"
-    - "VP Operations"
-    - "Co-Owner"
-    - "Founder"
-    - "Partner"
+    - "VP Marketing"
+    - "Head of Growth"
+    - "CMO"
+    - "Director of Marketing"
   geography:
-    - "Dubai, United Arab Emirates"
-    - "Abu Dhabi, United Arab Emirates"
-    - "Houston, TX"
-    - "Dallas, TX"
-    - "Los Angeles, CA"
-    - "Chicago, IL"
-    - "Atlanta, GA"
-  geo_coordinates:
-    "Dubai, United Arab Emirates": "25.2048,55.2708,40"
-    "Abu Dhabi, United Arab Emirates": "24.4539,54.3773,40"
-    "Houston, TX": "29.7604,-95.3698,50"
-    "Dallas, TX": "32.7767,-96.7970,50"
-    "Los Angeles, CA": "34.0522,-118.2437,50"
-    "Chicago, IL": "41.8781,-87.6298,50"
-    "Atlanta, GA": "33.7490,-84.3880,50"
-  hiring_signals:
-    - "Mechanic"
-    - "HVAC Technician"
-    - "Electrician"
-    - "Chef"
-    - "Cook"
-    - "Warehouse Associate"
+    - "United States"
+  # Roles that signal a company is in-market RIGHT NOW (a company hiring a
+  # "Head of Growth" is shopping for growth tooling). Used for careers-page
+  # scanning and job-board discovery. Empty = fall back to titles above.
+  hiring_signals: []
 
 channels:
   email:
     enabled: true
-    provider: "microsoft"      # gmail | microsoft | smtp | instantly
+    provider: "gmail"          # gmail (recommended) | microsoft | smtp | instantly
     max_daily_sends: 50
     require_approval: true      # native: review in Outbox; Instantly: sending held
     send_to_risky: false        # also send to catch-all domains (off = safest)
     max_bounce_rate: 0.05       # pause all sending if bounces exceed this
+    # New sending domain? Set start_date to the day your warmup service went
+    # on: no cold email for min_days, then the cold cap climbs from
+    # start_sends by daily_increase a day up to max_daily_sends. Replies are
+    # never held. Gmail/Microsoft/SMTP only (Instantly has its own warmup).
+    # Check readiness any time with `harvey warmup`.
     warmup:
-      start_date: ""
+      start_date: ""            # YYYY-MM-DD; blank = no ramp
       min_days: 14
       start_sends: 5
       daily_increase: 3
-      dkim_selector: ""
+      dkim_selector: ""         # only if your provider uses an unusual one
   linkedin:
-    enabled: false
+    enabled: false             # explicit opt-in; credentials alone do not enable it
     max_daily_connections: 20
     max_daily_messages: 10
 
@@ -99,15 +72,27 @@ usage:
   max_daily_claude_percent: 80
   heartbeat_interval_minutes: 15
   quiet_hours:
-    start: "23:00"
-    end: "06:00"
-    timezone: "Asia/Dubai"
+    start: "22:00"
+    end: "07:00"
+    timezone: "America/New_York"
 
+# Optional: check each new recipient with Precleared (precleared.dev) before
+# the first cold email: may cold marketing email go to this address under UK
+# PECR, US CAN-SPAM, Canada's CASL, Germany's UWG and France's rules? Any other
+# answer holds the email back, with the reason in the Outbox. One check per
+# address; 10 a day free without a key, 25 with a free key (PRECLEARED_API_KEY
+# in .env). Applies to the native providers (gmail, smtp). If all your prospects
+# are in one country, set prospect_country: Precleared uses it only when it can't
+# tell the country from the address, company records or the company's website.
 compliance:
-  postal_address: "EDISCAS Data Partnerships, Dubai & United States"
+  # Added under every cold email (never replies). US law (CAN-SPAM) requires a
+  # postal address you receive mail at: a street address, PO box or virtual
+  # mailbox. Until it's set, cold email still sends, with a warning.
+  postal_address: ""
+  # Keep wording Harvey recognises as an opt-out ("no thanks", "unsubscribe").
   opt_out_line: 'Not interested? Reply "no thanks" and I won''t email again.'
   precleared:
     enabled: false
-    sender_country: "US"
-    address_source: "unknown"
-    prospect_country: "US"
+    sender_country: ""          # GB or US: where your business is based
+    address_source: "unknown"   # published | bought | scraped | given | unknown
+    prospect_country: ""        # optional, e.g. US if all your prospects are in one country

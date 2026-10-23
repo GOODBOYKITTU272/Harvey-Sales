@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: harvey-sales
+    runtime: docker
+    plan: free
+    region: oregon
+    envVars:
+      - key: DASHBOARD_ALLOW_REMOTE
+        value: "true"
+      - key: DASHBOARD_TOKEN
+        generateValue: true

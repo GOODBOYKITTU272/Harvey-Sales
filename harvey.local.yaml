@@ -1,0 +1,113 @@
+persona:
+  name: "Ramakrishna"
+  company: "EDISCAS"
+  role: "Commercial Partnerships & Data Acquisition"
+  email: "ramakrishna@applywizz.ai"
+  linkedin: "linkedin.com/company/ediscas"
+  tone: "direct, consultative, respectful, partner-oriented"
+
+product:
+  name: "EDISCAS Physical AI Commercial Facility Program"
+  description: "Monetize hands-on commercial work tasks by capturing verified first-person (egocentric) smartphone video for robotics AI training, with 100% automated face/PII redaction and weekly payouts."
+  pricing: "$10,000–$20,000 USD/mo for active US facilities; 15,000–20,000 AED/mo in UAE (varies based on task volume and facility size). Weekly payouts via Zoho Books."
+  key_benefits:
+    - "New revenue stream from everyday facility operations (kitchens, auto repair, warehousing, plumbing/HVAC, carpentry)"
+    - "Zero workflow disruption: staff records approved hands-on work using everyday smartphones"
+    - "100% automated bystander face & PII de-identification, audio masking, and strict NDA protections"
+    - "Competitive task-based earnings paid weekly directly via Zoho Books in USD ($) or local currency"
+    - "Support frontier robotics and Physical AI foundation model development with verified commercial datasets"
+  objection_responses:
+    "will this disrupt our daily operations": "Not at all. Your staff only records routine, approved hands-on tasks they are already performing using a smartphone, with zero change to your customer workflow."
+    "what about customer and employee privacy": "We guarantee 100% automated bystander face de-identification, PII redaction, and audio masking. No customer faces or sensitive details ever leave your facility unredacted."
+    "what equipment do we need": "No expensive cameras or special rigs are needed. Any standard smartphone (iPhone 12+, Pixel 6+, Galaxy S21+) works with our tap-and-record Minutes tool."
+    "how and when do we get paid": "Payouts are task-based for accepted datasets and distributed weekly directly to your company account via Zoho Books."
+    "not interested": "Understood. Many facility owners don't realize that everyday commercial tasks like auto servicing, food prep, or warehouse picking are worth significant compensation to robotics AI labs right now. Would you be open to a 5-minute task rate overview?"
+  offer:
+    primary: "Commercial facility data licensing & recording partnership"
+    entry: "1-page approved task list & weekly payout rates"
+    goal: "get_reply"
+    booking_method: "ask_preference"
+    booking_url: ""
+    meeting_duration: ""
+    meeting_owner: "Ramakrishna"
+
+icp:
+  industries:
+    - "Auto Repair & Vehicle Services"
+    - "Restaurants & Commercial Kitchens"
+    - "Logistics, Warehousing & 3PL"
+    - "Plumbing, HVAC & Electrical"
+    - "Carpentry & Woodwork"
+    - "Construction & Renovation"
+    - "Manufacturing & Production"
+  company_size: "5-250 employees"
+  titles:
+    - "Owner"
+    - "Managing Director"
+    - "Operations Director"
+    - "Director of Operations"
+    - "General Manager"
+    - "Facility Manager"
+    - "VP Operations"
+    - "Co-Owner"
+    - "Founder"
+    - "Partner"
+  geography:
+    - "Dubai, United Arab Emirates"
+    - "Abu Dhabi, United Arab Emirates"
+    - "Houston, TX"
+    - "Dallas, TX"
+    - "Los Angeles, CA"
+    - "Chicago, IL"
+    - "Atlanta, GA"
+  geo_coordinates:
+    "Dubai, United Arab Emirates": "25.2048,55.2708,40"
+    "Abu Dhabi, United Arab Emirates": "24.4539,54.3773,40"
+    "Houston, TX": "29.7604,-95.3698,50"
+    "Dallas, TX": "32.7767,-96.7970,50"
+    "Los Angeles, CA": "34.0522,-118.2437,50"
+    "Chicago, IL": "41.8781,-87.6298,50"
+    "Atlanta, GA": "33.7490,-84.3880,50"
+  hiring_signals:
+    - "Mechanic"
+    - "HVAC Technician"
+    - "Electrician"
+    - "Chef"
+    - "Cook"
+    - "Warehouse Associate"
+
+channels:
+  email:
+    enabled: true
+    provider: "microsoft"      # gmail | microsoft | smtp | instantly
+    max_daily_sends: 50
+    require_approval: true      # native: review in Outbox; Instantly: sending held
+    send_to_risky: false        # also send to catch-all domains (off = safest)
+    max_bounce_rate: 0.05       # pause all sending if bounces exceed this
+    warmup:
+      start_date: ""
+      min_days: 14
+      start_sends: 5
+      daily_increase: 3
+      dkim_selector: ""
+  linkedin:
+    enabled: false
+    max_daily_connections: 20
+    max_daily_messages: 10
+
+usage:
+  max_daily_claude_percent: 80
+  heartbeat_interval_minutes: 15
+  quiet_hours:
+    start: "22:00"
+    end: "07:00"
+    timezone: "Asia/Dubai"
+
+compliance:
+  postal_address: "EDISCAS AI Research, Silicon Oasis, Dubai, UAE"
+  opt_out_line: 'Not interested? Reply "no thanks" and I won''t email again.'
+  precleared:
+    enabled: false
+    sender_country: "US"
+    address_source: "unknown"
+    prospect_country: "US"

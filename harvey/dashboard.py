@@ -2194,11 +2194,9 @@ class DashboardSetupError(Exception):
 
 
 def _check_loopback_bind(host: str) -> str:
-    """The host to bind. When DASHBOARD_ALLOW_REMOTE is enabled, allows binding to 0.0.0.0."""
-    allow_remote = os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
+    """The host to bind, which must be a loopback address. The dashboard has
+    no remote-access mode: from another machine, use an SSH tunnel."""
     name = (host or "").strip().lower()
-    if allow_remote:
-        return name or "0.0.0.0"
     if name.startswith("[") and name.endswith("]"):
         name = name[1:-1]
     if not auth.is_loopback(name):
@@ -2210,14 +2208,16 @@ def _check_loopback_bind(host: str) -> str:
 
 
 def dashboard_url(host: str = "127.0.0.1", port: int = 5555) -> str:
-    """The unlock link. The token rides in the #fragment."""
+    """The unlock link. The token rides in the #fragment, which browsers
+    never send to the server (so it stays out of logs and Referer); the
+    page moves it to sessionStorage and strips it from the address bar."""
     allow_remote = os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
     if allow_remote:
-        public_domain = os.getenv("RAILWAY_PUBLIC_DOMAIN") or os.getenv("RENDER_EXTERNAL_URL")
-        if public_domain:
-            if not public_domain.startswith("http"):
-                public_domain = f"https://{public_domain}"
-            return f"{public_domain}/#token={token_store.get()}"
+        public_url = os.getenv("RENDER_EXTERNAL_URL") or os.getenv("RAILWAY_PUBLIC_DOMAIN")
+        if public_url:
+            if not public_url.startswith("http"):
+                public_url = f"https://{public_url}"
+            return f"{public_url}/#token={token_store.get()}"
     name = _check_loopback_bind(host)
     try:
         if ipaddress.ip_address(name).version == 6:
@@ -2228,8 +2228,15 @@ def dashboard_url(host: str = "127.0.0.1", port: int = 5555) -> str:
 
 
 def start_dashboard(host: str = "127.0.0.1", port: int = 5555):
-    """Start the dashboard server (loopback only, token required)."""
+    """Start the dashboard server."""
     import uvicorn
+
+    allow_remote = os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
+    if "PORT" in os.environ:
+        try:
+            port = int(os.environ["PORT"])
+        except ValueError:
+            pass
 
     try:
         bind = _check_loopback_bind(host)
@@ -2244,4 +2251,4 @@ def start_dashboard(host: str = "127.0.0.1", port: int = 5555):
         print("  Windows: the token file is protected by your folder's permissions,")
         print("  not POSIX file modes.\n")
     uvicorn.run(app, host=bind, port=port, log_level="warning",
-                proxy_headers=False, server_header=False, date_header=False)
+                proxy_headers=allow_remote, server_header=False, date_header=False)

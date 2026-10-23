@@ -28,7 +28,7 @@ RUN useradd --create-home --uid 1000 harvey \
 COPY --chown=harvey:harvey harvey/ harvey/
 COPY --chown=harvey:harvey prompts/ prompts/
 COPY --chown=harvey:harvey skills/ skills/
-COPY --chown=harvey:harvey harvey.yaml .
+COPY --chown=harvey:harvey harvey*.yaml .
 
 USER harvey
 ENV PATH="/home/harvey/.local/bin:${PATH}"
@@ -42,9 +42,8 @@ RUN installer="$(mktemp)" \
     && rm "$installer" \
     && python -c "from harvey.claude_runtime import check_cli; print(check_cli())"
 
-# Healthy = the heartbeat loop has touched the database recently
-# (2h window tolerates long heartbeat intervals and quiet-hour idling).
-HEALTHCHECK --interval=5m --timeout=10s --start-period=3m --retries=3 \
-    CMD python -c "import os,sys,time; p='/app/data/harvey.db'; sys.exit(0 if os.path.exists(p) and time.time()-os.path.getmtime(p) < 7200 else 1)"
+# Healthy = the web dashboard answers HTTP checks
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request,os,sys; port=os.environ.get('PORT', 5555); sys.exit(0 if urllib.request.urlopen(f'http://127.0.0.1:{port}/').getcode() == 200 else 1)"
 
-CMD ["python", "-m", "harvey.main"]
+CMD ["sh", "-c", "python -m harvey.cli dashboard --host 0.0.0.0 --port ${PORT:-5555}"]

@@ -990,3 +990,26 @@ table.clip td { max-width: 320px; overflow: hidden; text-overflow: ellipsis; }
 .more-fields { margin-bottom: var(--sp-3); }
 .more-fields summary { cursor: pointer; font-size: var(--fs-ui); color: var(--text-2); margin-bottom: var(--sp-3); }
 .check-line { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-ui); color: var(--text-2); cursor: pointer; }
+
+/* ── Mobile Polish: Ultra-small screens (< 640px and < 480px) ── */
+@media (max-width: 640px) {
+  :root {
+    --fs-kpi: 1.4rem;
+  }
+  main.content { padding: var(--sp-3) var(--sp-2) 60px; }
+  .card { padding: var(--sp-4); }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+  .spark { display: none; }
+  .table-card { -webkit-overflow-scrolling: touch; }
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .search { max-width: 100%; min-width: 0; }
+  .search input { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .kpis { grid-template-columns: minmax(0, 1fr); }
+  .convo-head { flex-direction: column; align-items: flex-start; }
+  .convo-actions { flex-direction: column; align-items: stretch; }
+  .convo-actions .btn { width: 100%; justify-content: center; }
+  .toast { left: var(--sp-3); right: var(--sp-3); bottom: max(var(--sp-4), env(safe-area-inset-bottom)); }
+}
