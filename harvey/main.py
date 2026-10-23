@@ -228,6 +228,13 @@ async def heartbeat(stop_event: asyncio.Event | None = None):
             logger.warning(notice)
             logger.warning("=" * 60)
 
+    # Restore database and tokens from Supabase Storage if available
+    try:
+        from harvey.integrations.supabase_sync import restore_db_from_supabase
+        await restore_db_from_supabase(env)
+    except Exception as e:
+        logger.debug(f"Main heartbeat restore note: {e}")
+
     await state.init_db()
     logger.info("Database initialized.")
 
@@ -371,6 +378,13 @@ async def heartbeat(stop_event: asyncio.Event | None = None):
                 await state.log_action(action_type=action, agent="main")
             except Exception as e:
                 logger.warning(f"Failed to log action '{action}': {e}")
+
+            # Backup database snapshot to Supabase cloud
+            try:
+                from harvey.integrations.supabase_sync import backup_db_to_supabase
+                await backup_db_to_supabase(env)
+            except Exception as e:
+                logger.warning(f"Supabase cycle backup note: {e}")
 
             consecutive_errors = 0
 

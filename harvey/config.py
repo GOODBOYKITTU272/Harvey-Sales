@@ -528,6 +528,9 @@ class EnvConfig(BaseModel):
     m365_tenant_id: str = ""
     # Optional: only used when compliance.precleared.enabled is true.
     precleared_api_key: str = ""
+    # Supabase cloud persistence (preserves data/harvey.db across ephemeral deploys)
+    supabase_url: str = ""
+    supabase_service_role_key: str = ""
 
 
 def _format_validation_error(e: ValidationError) -> str:
@@ -639,6 +642,8 @@ def load_env() -> EnvConfig:
         m365_client_id=os.getenv("M365_CLIENT_ID", "").strip(),
         m365_tenant_id=os.getenv("M365_TENANT_ID", "").strip(),
         precleared_api_key=os.getenv("PRECLEARED_API_KEY", "").strip(),
+        supabase_url=os.getenv("SUPABASE_URL", "").strip(),
+        supabase_service_role_key=os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip(),
     )
     return env
 

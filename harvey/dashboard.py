@@ -52,6 +52,16 @@ app = FastAPI(title="Harvey Dashboard", docs_url=None, redoc_url=None, openapi_u
 token_store = auth.TokenStore(TOKEN_FILE)
 app.add_middleware(auth.DashboardGuard, store=token_store)
 
+
+@app.on_event("startup")
+async def on_startup():
+    """Restore database and credentials from Supabase Storage on boot."""
+    try:
+        from harvey.integrations.supabase_sync import restore_db_from_supabase
+        await restore_db_from_supabase()
+    except Exception as e:
+        logger.warning(f"Supabase startup restore warning: {e}")
+
 # Harvey process tracking
 _harvey_process: subprocess.Popen | None = None
 _harvey_started_at: datetime | None = None
@@ -979,6 +989,12 @@ async def outbox_send_now():
 
         sender.send_pacing = False
         sent_count = await sender._drain_due()
+        if sent_count > 0:
+            try:
+                from harvey.integrations.supabase_sync import backup_db_to_supabase
+                asyncio.create_task(backup_db_to_supabase(env))
+            except Exception:
+                pass
         return {
             "success": True,
             "sent": sent_count,
@@ -2640,6 +2656,12 @@ def start_dashboard(host: str = "127.0.0.1", port: int = 5555):
             port = int(os.environ["PORT"])
         except ValueError:
             pass
+
+    try:
+        from harvey.integrations.supabase_sync import restore_db_from_supabase
+        asyncio.run(restore_db_from_supabase())
+    except Exception as e:
+        logger.debug(f"Pre-bind Supabase restore: {e}")
 
     try:
         bind = _check_loopback_bind(host)
