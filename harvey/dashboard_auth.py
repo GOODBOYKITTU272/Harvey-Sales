@@ -199,6 +199,9 @@ def _read_token_settled(path: Path) -> str | None:
 
 
 def load_or_create_token(path: Path) -> str:
+    env_token = os.getenv("DASHBOARD_TOKEN", "").strip()
+    if env_token:
+        return env_token
     path = Path(path)
     try:
         path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -337,10 +340,17 @@ class DashboardGuard:
         method = scope.get("method", "GET").upper()
         path = scope.get("path", "")
 
+        allow_remote = (
+            os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
+            or bool(os.getenv("RENDER"))
+            or bool(os.getenv("VERCEL"))
+            or bool(os.getenv("RAILWAY_ENVIRONMENT"))
+        )
+
         # 1. Host, before anything else.
         hosts = headers.get("host", [])
         host = parse_host(hosts[0]) if len(hosts) == 1 else None
-        if host is None or not is_loopback(host):
+        if host is None or (not allow_remote and not is_loopback(host)):
             return await deny(400, "bad_host",
                               "This dashboard only answers to localhost / 127.0.0.1.")
         host_header = hosts[0].lower()
@@ -351,11 +361,12 @@ class DashboardGuard:
                       and headers.get("sec-fetch-mode", [""])[0] == "navigate"
                       and headers.get("sec-fetch-dest", [""])[0] == "document")
         origins = headers.get("origin", [])
-        if origins and (len(origins) != 1 or origins[0].lower() != f"http://{host_header}"):
+        valid_origins = (f"http://{host_header}", f"https://{host_header}") if allow_remote else (f"http://{host_header}",)
+        if origins and (len(origins) != 1 or origins[0].lower() not in valid_origins):
             if not navigation:
                 return await deny(403, "cross_origin", "Cross-origin requests are refused.")
         site = headers.get("sec-fetch-site", [])
-        if site and site[0].lower() not in ("same-origin", "none") and not navigation:
+        if site and site[0].lower() not in ("same-origin", "none") and not navigation and not allow_remote:
             return await deny(403, "cross_origin", "Cross-site requests are refused.")
 
         if public:

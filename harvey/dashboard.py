@@ -2194,11 +2194,18 @@ class DashboardSetupError(Exception):
 
 
 def _check_loopback_bind(host: str) -> str:
-    """The host to bind, which must be a loopback address. The dashboard has
-    no remote-access mode: from another machine, use an SSH tunnel."""
+    """The host to bind. Must be loopback unless remote is allowed."""
     name = (host or "").strip().lower()
     if name.startswith("[") and name.endswith("]"):
         name = name[1:-1]
+    allow_remote = (
+        os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
+        or bool(os.getenv("RENDER"))
+        or bool(os.getenv("VERCEL"))
+        or bool(os.getenv("RAILWAY_ENVIRONMENT"))
+    )
+    if allow_remote and name in ("0.0.0.0", "::", ""):
+        return name
     if not auth.is_loopback(name):
         raise DashboardSetupError(
             f"Refusing to listen on {host!r}: the dashboard only listens on this machine "
@@ -2211,9 +2218,18 @@ def dashboard_url(host: str = "127.0.0.1", port: int = 5555) -> str:
     """The unlock link. The token rides in the #fragment, which browsers
     never send to the server (so it stays out of logs and Referer); the
     page moves it to sessionStorage and strips it from the address bar."""
-    allow_remote = os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
+    allow_remote = (
+        os.getenv("DASHBOARD_ALLOW_REMOTE", "").lower() in ("true", "1", "yes")
+        or bool(os.getenv("RENDER"))
+        or bool(os.getenv("VERCEL"))
+        or bool(os.getenv("RAILWAY_ENVIRONMENT"))
+    )
     if allow_remote:
-        public_url = os.getenv("RENDER_EXTERNAL_URL") or os.getenv("RAILWAY_PUBLIC_DOMAIN")
+        public_url = (
+            os.getenv("RENDER_EXTERNAL_URL")
+            or os.getenv("RAILWAY_PUBLIC_DOMAIN")
+            or (f"https://{os.getenv('VERCEL_URL')}" if os.getenv("VERCEL_URL") else None)
+        )
         if public_url:
             if not public_url.startswith("http"):
                 public_url = f"https://{public_url}"
