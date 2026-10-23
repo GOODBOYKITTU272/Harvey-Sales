@@ -10,7 +10,7 @@
 // query string, never another host.
 
 const AUTH_KEY = 'harvey-dashboard-token';
-const AUTH_TOKEN_RE = /^[A-Za-z0-9_-]{43,128}$/;
+const AUTH_TOKEN_RE = /^[A-Za-z0-9_-]{8,128}$/;
 
 (function takeFragmentToken() {
   const hash = window.location.hash || '';
