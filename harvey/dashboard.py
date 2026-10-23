@@ -2194,7 +2194,15 @@ async def static_file(path: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard():
-    return (WEB_DIR / "index.html").read_text(encoding="utf-8")
+    html = (WEB_DIR / "index.html").read_text(encoding="utf-8")
+    if auth.is_remote_allowed():
+        try:
+            token = token_store.get()
+            script = f"<script>try {{ sessionStorage.setItem('harvey-dashboard-token', {json.dumps(token)}); }} catch(e) {{}}</script>"
+            html = html.replace('<script src="/static/auth.js"></script>', f'<script src="/static/auth.js"></script>\n{script}')
+        except Exception:
+            pass
+    return html
 
 
 class DashboardSetupError(Exception):
