@@ -537,21 +537,21 @@ class Sender:
             return "failed", "gate: " + "; ".join(gate.reasons)[:300]
         return None
 
-    async def _drain_due(self):
+    async def _drain_due(self) -> int:
         """Send due, approved outbox items through the provider."""
         if not self.provider.is_configured():
             logger.warning(
                 f"Sender: mail provider '{self.provider.name}' is not configured "
                 "yet — outbox is holding. See CLAUDE.md → provider setup."
             )
-            return
+            return 0
 
         max_daily = self.config.channels.email.max_daily_sends
         sent_today = await self.state.count_outbox_sent_today()
         budget = min(MAX_SENDS_PER_CYCLE, max_daily - sent_today)
         if budget <= 0:
             logger.info(f"Sender: daily send cap reached ({sent_today}/{max_daily}).")
-            return
+            return 0
         # Cold email has its own cap under the warmup ramp; replies don't.
         # Counted from local midnight, the day the ramp counts in.
         cold_cap = cold_daily_cap(self.config.channels.email)
@@ -582,7 +582,7 @@ class Sender:
                 key=lambda i: (i.get("send_at") or "", i.get("created_at") or ""),
             )
         if not due:
-            return
+            return 0
 
         allow_risky = getattr(self.config.channels.email, "send_to_risky", False)
         sent = 0
@@ -738,3 +738,4 @@ class Sender:
         if sent:
             logger.info(f"Sender: {sent} email(s) sent this cycle "
                         f"({sent_today + sent}/{max_daily} today).")
+        return sent

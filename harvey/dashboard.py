@@ -935,6 +935,59 @@ async def outbox_approve_all():
         return JSONResponse({"success": False, "message": str(e)}, status_code=500)
 
 
+@app.post("/api/outbox/send")
+async def outbox_send_now():
+    """Trigger an immediate send cycle for approved outbox items."""
+    try:
+        from harvey.config import load_config, load_env
+        from harvey.brain import Brain
+        from harvey.agents.sender import Sender
+        from harvey.agents.handler import Handler
+
+        config, env = load_config(), load_env()
+        state = _state()
+        await state.init_db()
+
+        paused = await state.get_setting("sending_paused")
+        if paused:
+            return JSONResponse({
+                "success": False,
+                "message": f"Sending is paused: {paused}. Resume sending first.",
+            }, status_code=400)
+
+        brain = Brain(state, config.brain)
+        handler = Handler(brain, state, config, env)
+        sender = Sender(brain, state, config, env)
+
+        if not sender.is_native:
+            return JSONResponse({
+                "success": False,
+                "message": "Immediate outbox sending is only available for native mail providers.",
+            }, status_code=400)
+
+        if not sender.provider or not sender.provider.is_configured():
+            return JSONResponse({
+                "success": False,
+                "message": f"Mail provider '{sender.provider.name if sender.provider else 'none'}' is not configured.",
+            }, status_code=400)
+
+        try:
+            await handler._run_native()
+        except Exception as e:
+            logger.warning(f"Handler pre-send reply check warning: {e}")
+
+        sender.send_pacing = False
+        sent_count = await sender._drain_due()
+        return {
+            "success": True,
+            "sent": sent_count,
+            "message": f"Successfully sent {sent_count} email(s)." if sent_count else "No approved emails due to send right now.",
+        }
+    except Exception as e:
+        logger.error(f"Failed to drain outbox: {e}")
+        return JSONResponse({"success": False, "message": str(e)}, status_code=500)
+
+
 @app.post("/api/outbox/{item_id}/approve")
 async def outbox_approve(item_id: str):
     try:

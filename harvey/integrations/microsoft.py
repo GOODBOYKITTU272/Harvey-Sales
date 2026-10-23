@@ -28,6 +28,7 @@ import http.server
 import json
 import logging
 import os
+import re
 import secrets
 import socket
 import time
@@ -396,6 +397,16 @@ class MicrosoftProvider(MailProvider):
         return True, f"Connected as {me}"
 
 
+def _is_graph_inbox_path(path: str) -> bool:
+    p = path.lower()
+    if not (p.startswith("/v1.0/") and p.endswith("/messages")):
+        return False
+    # Microsoft Graph uses both /me/mailFolders/inbox/messages and /me/mailFolders('inbox')/messages
+    p_norm = p.replace("%27", "").replace("'", "")
+    p_norm = re.sub(r"mailfolders\(\s*inbox\s*\)", "mailfolders/inbox", p_norm)
+    return p_norm == INBOX_MESSAGES_PATH.lower()
+
+
 def _checked_next_link(link) -> str:
     """Graph's @odata.nextLink, used whole (Microsoft: don't rebuild or
     edit $skip). It gets the bearer token, so it must point back at the
@@ -416,7 +427,7 @@ def _checked_next_link(link) -> str:
         or url.port not in (None, 443)
         or url.userinfo
         or url.fragment
-        or path.lower() != INBOX_MESSAGES_PATH.lower()
+        or not _is_graph_inbox_path(path)
         or not url.query
     ):
         raise GraphError("@odata.nextLink rejected: not the Graph inbox listing")

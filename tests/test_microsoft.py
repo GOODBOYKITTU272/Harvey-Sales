@@ -58,7 +58,8 @@ class Graph:
             return httpx.Response(200 if method == "PATCH" else 204, json={} if method == "PATCH" else None)
         if path.endswith("/send"):
             return httpx.Response(202)
-        if path == "/v1.0/me/mailFolders/inbox/messages":
+        norm_path = path.lower().replace("%27", "").replace("'", "")
+        if norm_path in ("/v1.0/me/mailfolders/inbox/messages", "/v1.0/me/mailfolders(inbox)/messages"):
             return self._inbox_page(request)
         return httpx.Response(404, json={"error": {"code": "notFound"}})
 
@@ -85,7 +86,12 @@ class Graph:
                 if r.url.host == "graph.microsoft.com"]
 
     def inbox_requests(self):
-        return [r for r in self.requests if r.url.path.endswith("/inbox/messages")]
+        return [
+            r for r in self.requests
+            if r.url.path.lower().replace("%27", "").replace("'", "").endswith(
+                ("inbox/messages", "inbox)/messages")
+            )
+        ]
 
 
 def message(i, sender="someone@elsewhere.example", body="hello"):
@@ -387,9 +393,12 @@ async def test_a_bad_later_page_fails_the_whole_read(graph, override):
     "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages",
     "/v1.0/me/mailFolders/inbox/messages?%24skip=50",
     "https://graph.microsoft.com/v1.0/me/mailFolders/inbox/messages?a=1\r\nX-Evil: 1",
+    "https://graph.microsoft.com/v1.0/me/mailFolders('junk')/messages?%24skip=50",
+    "https://graph.microsoft.com/v1.0/me/mailFolders('sentitems')/messages?%24skip=50",
 ], ids=["http", "off-origin", "suffix-host", "userinfo-host", "credentials", "port",
         "fragment", "empty-fragment", "backslash", "other-path", "send-path",
-        "dot-segments", "encoded-slash", "beta", "no-query", "relative", "crlf"])
+        "dot-segments", "encoded-slash", "beta", "no-query", "relative", "crlf",
+        "junk-folder", "sent-folder"])
 async def test_hostile_next_link_is_refused_before_any_request(graph, link):
     graph.inbox = [message(i) for i in range(60)]
     graph.pages[1] = {"@odata.nextLink": link}
@@ -403,6 +412,20 @@ async def test_hostile_next_link_is_refused_before_any_request(graph, link):
     graph_requests = [r for r in graph.requests if r.url.host == "graph.microsoft.com"]
     assert [r.url.path for r in graph_requests] == [
         "/v1.0/me", "/v1.0/me/mailFolders/inbox/messages"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("link", [
+    "https://graph.microsoft.com/v1.0/me/mailFolders('inbox')/messages?%24skip=50",
+    "https://graph.microsoft.com/v1.0/me/mailFolders(%27inbox%27)/messages?%24top=50&%24skip=50",
+    "https://graph.microsoft.com/v1.0/me/mailfolders('inbox')/messages?%24skip=50",
+])
+async def test_odata_inbox_next_link_is_accepted(graph, link):
+    graph.inbox = [message(i) for i in range(60)]
+    graph.pages[1] = {"@odata.nextLink": link}
+    replies = await provider(graph).get_replies()
+    assert len(replies) == 60
+    assert len(graph.inbox_requests()) == 2
 
 
 @pytest.mark.asyncio

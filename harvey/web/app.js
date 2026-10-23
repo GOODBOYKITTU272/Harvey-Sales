@@ -1590,9 +1590,13 @@ async function loadOutbox() {
   if (_desk.i >= pending.length) _desk.i = Math.max(0, pending.length - 1);
   navCount('nav-outbox', pending.length);
 
+  const approved = data.approved || [];
   actions.innerHTML =
+    (approved.length && !data.paused
+      ? '<button class="btn btn-primary btn-sm" id="btn-send-approved" onclick="outboxSendNow()">' +
+        'Send approved now (' + approved.length + ')</button>' : '') +
     (pending.length && !data.paused
-      ? '<button class="btn btn-primary btn-sm" onclick="outboxApproveAll()">Approve all ' +
+      ? '<button class="btn btn-secondary btn-sm" onclick="outboxApproveAll()">Approve all ' +
         pending.length + '</button>' : '') +
     (data.paused
       ? '<button class="btn btn-secondary btn-sm" onclick="sendingToggle(\'resume\')">' +
@@ -1829,6 +1833,28 @@ async function outboxApproveAll() {
   if (data && data.success) showToast('Approved ' + data.approved + ' email(s).', 'success');
   else showToast(failMsg(data, 'Approve-all failed.'), 'error');
   loadOutbox();
+}
+
+async function outboxSendNow() {
+  const btn = document.getElementById('btn-send-approved');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerText = 'Sending...';
+  }
+  showToast('Sending approved emails...', 'info');
+  try {
+    const data = await api('/api/outbox/send', {method: 'POST'});
+    if (data && data.success) {
+      showToast(data.message || ('Sent ' + data.sent + ' email(s).'), 'success');
+    } else {
+      showToast(failMsg(data, 'Could not send approved emails.'), 'error');
+    }
+  } catch (e) {
+    showToast('Failed to dispatch outbox: ' + (e.message || e), 'error');
+  } finally {
+    await loadOutbox();
+    if (typeof loadToday === 'function') loadToday();
+  }
 }
 
 async function sendingToggle(action) {
