@@ -255,8 +255,8 @@ class Writer:
         if prospect.is_company_inbox:
             facts = [
                 f"- Name: unknown. This goes to the company's general inbox ({prospect.email}),"
-                " most likely read by the owner or the office manager. Use no first name;"
-                " open with 'Hi there' or address the company's team.",
+                " read by the owner or office manager. Open with:"
+                f" 'Hi team,\n\nHope this reaches the operations director or owner at {prospect.company}.'",
                 f"- Company: {prospect.company}",
             ]
         else:
@@ -303,19 +303,27 @@ class Writer:
 
         prompt += f"""
 
-Write ONE cold email (the very first touch) to this specific person.
+Write ONE cold email (the very first touch) to this specific facility or contact.
 
-FACTS — everything you know about them. Every claim about the prospect in
-your email must come from these facts. If a fact isn't listed here, you
-don't know it — do not invent funding rounds, mutual contacts, metrics,
-or anything else:
+FACTS — everything you know about them:
 {chr(10).join(facts)}
 
 Requirements:
-- Under 75 words. One specific observation from the FACTS above, one
-  question. No pitch, no product name.
-- Write the actual text (no merge variables — you know their name/company).
-- Subject: lowercase, 2-5 words.
+- Under 75 words.
+- Opening:
+  If general inbox, open with:
+  "Hi team,\n\nHope this reaches the operations director or owner at {prospect.company}."
+  If named person, open with:
+  "Hi {prospect.first_name},\n\nHope this finds you well at {prospect.company}."
+- Core Offer:
+  State clearly that we are licensing anonymized smartphone recordings of routine technical/hands-on tasks for robotics AI foundation models, paying 15–18 AED per hour to local facilities (or USD equivalent for US).
+- Question/CTA:
+  "Are you open to a paid data partnership that runs alongside your daily field jobs?"
+- Subject line format:
+  "quick question regarding your technicians - EDISCAS AI Research | Dubai Silicon Oasis" (or trade-specific like HVAC, auto mechanics, carpentry, kitchens).
+- Signature:
+  Ramakrishna
+  EDISCAS AI Research | Dubai Silicon Oasis
 - No postal address, unsubscribe or opt-out line: Harvey adds them when it sends.
 - Follow every STRICT EMAIL RULE above.
 
@@ -389,12 +397,11 @@ Write a 3-email cold outreach sequence for prospects like these:
 {prospect_summary}
 
 Requirements:
-- Email 1: Personalized cold observation + one question. Under 75 words. No pitch.
-- Email 2: Follow-up 3 days later. Different angle, one concrete proof point. Under 75 words.
-- Email 3: Break-up email 4 days after that. Under 40 words. Gracious, not guilt-tripping.
+- Email 1: Paid commercial data partnership offer. Under 75 words. State that EDISCAS licenses anonymized smartphone video of routine hands-on work for robotics AI foundation models, paying 15-18 AED per hour (or USD equivalent for US). Ask if open to a paid partnership alongside daily jobs.
+- Email 2: Follow-up 3 days later. Under 75 words. Highlight zero workflow disruption (workers use smartphones during regular tasks) and 100% automated bystander face/PII redaction.
+- Email 3: Polite break-up email 4 days after that. Under 40 words. Gracious, leaving the door open for future commercial datasets.
 {merge_rule}
-- Never be pushy or salesy. Be consultative and value-driven.
-- Subject lines: lowercase, 2-5 words.
+- Subject lines format: quick question regarding your [trade/technicians] - EDISCAS AI Research | Dubai Silicon Oasis (or quick question for {{first_name}} - EDISCAS AI Research | Dubai Silicon Oasis).
 - No postal address, unsubscribe or opt-out line: Harvey adds them when it sends.
 - Follow every rule in the STRICT EMAIL RULES above. No exceptions.
 

@@ -21,16 +21,20 @@ STRICT EMAIL RULES — FOLLOW EVERY SINGLE ONE:
 5. NEVER use bullet points, bold, italics, or any formatting. Plain text only.
 6. NEVER say "worth a quick look/chat/call?" — be specific or ask a real question.
 7. NEVER say "I'd love to", "just wanted to", "reaching out because", "just following up", "hope this finds you well", "hope you're doing well", "I know you're busy".
-8. NEVER start an email with "I" or "We". Start with them.
-9. NEVER use exclamation marks.
-10. Email 1 MUST be under 75 words. Email 2 under 75 words. Email 3 under 40 words. Count them.
-11. Email 1 does NOT pitch the product. It makes an observation and asks a question.
-12. Subject lines: lowercase, 2-5 words, no prospect name, no "quick question".
-13. Each email has exactly ONE question or CTA. Not two. Not zero. One.
-14. Write like a real person, not a marketer. Read it out loud. If it sounds like AI wrote it, rewrite it.
-15. Do NOT name the product in email 1. Save that for email 2 or the reply.
-16. NEVER use "no pressure", "no obligation", "no contracts" in email 1.
-17. When writing multiple campaigns, each one must feel completely different in tone, structure, and angle. Not just different pain points in the same format.
+8. NEVER use exclamation marks.
+9. Email 1 MUST be under 75 words. Email 2 under 75 words. Email 3 under 40 words.
+10. Subject line format: quick question regarding your [trade/technicians] - EDISCAS AI Research | Dubai Silicon Oasis (or quick question for {{first_name}} - EDISCAS AI Research | Dubai Silicon Oasis).
+11. Opening for general team inboxes (info@, support@, etc.):
+    "Hi team,\n\nHope this reaches the operations director or owner at {{company}}."
+    Opening for named individuals:
+    "Hi {{first_name}},\n\nHope this finds you well at {{company}}."
+12. Email 1 CORE OFFER: Clearly and concisely state that EDISCAS is licensing anonymized smartphone recordings of routine technical/hands-on work for robotics AI foundation models, paying 15-18 AED per hour to local trade facilities (or $15-25 USD/hr for US facilities).
+13. Email 1 CTA: Ask if they are open to a paid commercial data partnership that runs alongside their daily jobs.
+14. Each email has exactly ONE question or CTA.
+15. Write like a real person, respectful and direct.
+16. Signature:
+    Ramakrishna
+    EDISCAS AI Research | Dubai Silicon Oasis
 
 SOUNDS-HUMAN CHECKS — the patterns that still give AI away after the rules above. Before returning, reread every email and rewrite any sentence that does one of these:
 - "Not X, but Y" contrasts, including split across two sentences ("It's not about X. It's about Y.") or "less X, more Y". Just state Y.
