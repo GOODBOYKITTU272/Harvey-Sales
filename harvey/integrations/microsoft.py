@@ -75,6 +75,7 @@ class GraphError(RuntimeError):
 
 
 def _load_token() -> dict | None:
+    # 1. Configured / test monkeypatched location
     try:
         if TOKEN_FILE.is_file():
             data = json.loads(TOKEN_FILE.read_text(encoding="utf-8"))
@@ -82,6 +83,27 @@ def _load_token() -> dict | None:
                 return data
     except (OSError, json.JSONDecodeError) as e:
         logger.warning(f"Could not read Microsoft token file: {e}")
+
+    # 2. Render Secret File or App Root
+    for candidate in (Path("/etc/secrets/m365_token.json"), PROJECT_ROOT / "m365_token.json"):
+        try:
+            if candidate.is_file():
+                data = json.loads(candidate.read_text(encoding="utf-8"))
+                if isinstance(data, dict) and data.get("refresh_token"):
+                    return data
+        except (OSError, json.JSONDecodeError):
+            pass
+
+    # 3. Environment variable fallback
+    env_token = os.getenv("M365_TOKEN_JSON", "").strip()
+    if env_token:
+        try:
+            data = json.loads(env_token)
+            if isinstance(data, dict) and data.get("refresh_token"):
+                return data
+        except Exception:
+            pass
+
     return None
 
 

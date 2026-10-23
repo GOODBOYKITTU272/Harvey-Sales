@@ -156,6 +156,15 @@ def _write_env_file(updates: dict[str, str]):
     load_dotenv(str(ENV_FILE), override=True)
 
 
+def _has_m365_token() -> bool:
+    return (
+        (PROJECT_ROOT / "data" / "m365_token.json").is_file()
+        or Path("/etc/secrets/m365_token.json").is_file()
+        or (PROJECT_ROOT / "m365_token.json").is_file()
+        or bool(os.getenv("M365_TOKEN_JSON", "").strip())
+    )
+
+
 def _check_harvey_pid() -> int | None:
     """Check if there's a running Harvey process from a PID file."""
     global _harvey_process, _harvey_started_at
@@ -209,8 +218,7 @@ async def get_setup_status():
         provider_help = ("Set GMAIL_CLIENT_ID/SECRET in Settings, then run "
                          "'harvey gmail auth' in your terminal.")
     elif provider == "microsoft":
-        provider_done = _has("M365_CLIENT_ID") and \
-            (PROJECT_ROOT / "data" / "m365_token.json").is_file()
+        provider_done = _has("M365_CLIENT_ID") and _has_m365_token()
         provider_help = ("Set the Microsoft 365 client and tenant IDs in Settings, then run "
                          "'harvey microsoft auth' in your terminal.")
     elif provider == "smtp":
@@ -354,7 +362,7 @@ async def get_settings():
         # in as a public client with PKCE); the token file means signed in.
         "m365_client_id": env_vars.get("M365_CLIENT_ID", ""),
         "m365_tenant_id": env_vars.get("M365_TENANT_ID", ""),
-        "m365_authorized": (PROJECT_ROOT / "data" / "m365_token.json").is_file(),
+        "m365_authorized": _has_m365_token(),
         "reoon_api_key_set": is_set("REOON_API_KEY"),
         "zerobounce_api_key_set": is_set("ZEROBOUNCE_API_KEY"),
         "hunter_api_key_set": is_set("HUNTER_API_KEY"),
